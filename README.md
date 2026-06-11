@@ -1,3 +1,8 @@
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![CMake](https://img.shields.io/badge/CMake-3.10+-blue.svg)](https://cmake.org)
+[![x86-64](https://img.shields.io/badge/Architecture-x86--64-red.svg)]()
+[![Assembly](https://img.shields.io/badge/Languages-C%2FAssembly-green.svg)]()
+
 # Firmawork - Generic Bare-Metal Firmware
 
 Hardware-independent bare-metal firmware written in C and Assembly.
@@ -65,16 +70,21 @@ This will generate:
 
 ## How It Works
 
-1. **boot.asm** - 16-bit real mode bootloader
-   - Loads kernel from disk (INT 0x13)
-   - Enables A20 line
-   - Sets up GDT
-   - Switches to 32-bit protected mode
-   - Jumps to kernel
+### Stage 1: Bootloader (boot.asm)
+- **Real Mode (16-bit)**
+- Initializes CPU state (segment registers, stack)
+- Loads kernel from disk using BIOS INT 0x13
+- Enables A20 line (enables access to all memory)
+- Loads GDT (Global Descriptor Table)
+- Switches to Protected Mode (32-bit)
+- Jumps to kernel entry point
 
-2. **kernel.c** - 32-bit protected mode kernel
-   - Writes "FIRMA WORK" to VGA memory
-   - Halts CPU
+### Stage 2: Kernel (kernel.c)
+- **Protected Mode (32-bit)**
+- Sets up segment registers for protected mode
+- Initializes stack pointer
+- Writes "FIRMA WORK" to VGA memory (0xB8000)
+- Enters infinite halt loop
 
 ## Adapting to Hardware
 
@@ -88,10 +98,11 @@ To adapt this firmware to specific hardware:
 ## Memory Map
 
 Default memory layout (adjust in linker.ld):
-- **Code**: 0x100000 (1 MB)
+- **Boot Sector**: 0x7C00 (512 bytes, loaded by BIOS)
+- **Code**: 0x10000 (1 MB)
 - **Data**: Following code section
 - **BSS**: Following data section
-- **Stack**: 16KB at end
+- **Stack**: 0x90000 (grows downward)
 
 ## Testing
 
@@ -108,26 +119,81 @@ qemu-system-i386 -drive format=raw,file=firmware.bin
 
 ## Use Cases
 
-- 🎓 Learning OS development
-- 🔧 Starting point for custom firmware
-- 📚 Understanding bootloaders
-- 🏗️ Building embedded systems
+- 🎓 Learning OS development from scratch
+- 🔧 Starting point for custom firmware projects
+- 📚 Understanding x86 bootloaders and protected mode
+- 🏗️ Building embedded systems and kernels
+- 🔬 Experimenting with low-level hardware interaction
+
+## Architecture Details
+
+### Boot Process Flow
+```
+BIOS → boot.asm (real mode) → GDT setup → Protected mode → kernel.c → Halt
+```
+
+### Compilation Pipeline
+```
+boot.asm → NASM → boot.bin
+kernel.c → GCC → kernel.o → LD → kernel.elf → objcopy → kernel.bin
+boot.bin + kernel.bin → firmware.bin (QEMU-ready image)
+```
 
 ## References
 
 - [OSDev.org - Bootloader](https://wiki.osdev.org/Bootloader)
 - [OSDev.org - Protected Mode](https://wiki.osdev.org/Protected_Mode)
-- [x86 Assembly Guide](https://www.nasm.us/)
+- [Intel 80386 Reference Manual](https://www.intel.com/)
+- [x86 Assembly Guide - NASM](https://www.nasm.us/)
 - [CMake Documentation](https://cmake.org/cmake/help/latest/)
+- [GCC ARM Options](https://gcc.gnu.org/onlinedocs/gcc/ARM-Options.html)
+
+## Troubleshooting
+
+### Build fails with "nasm not found"
+```bash
+# Install NASM
+sudo apt-get install nasm          # Ubuntu/Debian
+brew install nasm                   # macOS
+choco install nasm                  # Windows
+```
+
+### QEMU not found
+```bash
+# Install QEMU
+sudo apt-get install qemu-system-x86    # Ubuntu/Debian
+brew install qemu                       # macOS
+choco install qemu                      # Windows
+```
+
+### "cmake: not found"
+```bash
+# Install CMake 3.10+
+sudo apt-get install cmake              # Ubuntu/Debian
+brew install cmake                      # macOS
+choco install cmake                     # Windows
+```
 
 ## License
 
 MIT License - Feel free to use and modify for your hardware projects.
 
+See [LICENSE](LICENSE) file for details.
+
 ## Contributing
 
-Suggestions and improvements are welcome! Feel free to open issues or submit pull requests.
+Suggestions and improvements are welcome! Feel free to:
+- 🐛 Report bugs
+- 💡 Suggest features
+- 🔧 Submit pull requests
+- 📝 Improve documentation
+
+## Author
+
+Created by **YOUTOBER-1** for the OSdev community.
 
 ---
 
 **Made with ❤️ for OS enthusiasts and embedded developers**
+
+*Want to use Firmawork? Star ⭐ this repo to show your support!*
